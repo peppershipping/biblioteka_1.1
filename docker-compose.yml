@@ -1,0 +1,63 @@
+# Библиотека: nginx (frontend + reverse proxy) -> backend (FastAPI) -> db (PostgreSQL), + redis (кэш).
+# Запуск:  docker compose up --build        Приложение: http://localhost:8080
+services:
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: biblioteka
+      POSTGRES_USER: biblioteka
+      POSTGRES_PASSWORD: biblioteka
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U biblioteka -d biblioteka"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    # Только кэш: без сохранения на диск; потеря данных Redis ничего не ломает
+    command: ["redis-server", "--save", "", "--appendonly", "no"]
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  backend:
+    build: ./backend
+    restart: unless-stopped
+    env_file:
+      - path: ./backend/.env
+        required: false      # файл создаётся копированием backend/.env.example
+    environment:
+      DATABASE_URL: postgresql+psycopg://biblioteka:biblioteka@db:5432/biblioteka
+      REDIS_URL: redis://redis:6379/0
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    ports:
+      - "8000:8000"          # Swagger UI: http://localhost:8000/docs (только для разработки)
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health', timeout=3)"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+
+  nginx:
+    build: ./frontend
+    restart: unless-stopped
+    depends_on:
+      backend:
+        condition: service_healthy
+    ports:
+      - "8080:80"
+
+volumes:
+  pgdata:
