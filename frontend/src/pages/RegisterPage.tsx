@@ -1,7 +1,14 @@
+<<<<<<< HEAD
 import { useEffect, useState } from "react";
 import type { FormEvent } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { clearError, register } from "../store/authSlice";
+=======
+import { useState } from "react";
+import type { FormEvent } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import { register } from "../store/authSlice";
+>>>>>>> 088ebc434e4e609566051a7126e169906afacece
 import { useAppDispatch, useAppSelector } from "../store";
 
 export default function RegisterPage() {
@@ -14,6 +21,7 @@ export default function RegisterPage() {
   const [password, setPassword] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
+<<<<<<< HEAD
   useEffect(() => {
     dispatch(clearError());
   }, [dispatch]);
@@ -24,6 +32,16 @@ export default function RegisterPage() {
     const result = await dispatch(register({ username, email, password }));
     setSubmitting(false);
     if (register.fulfilled.match(result)) navigate("/library", { replace: true });
+=======
+  const handleSubmit = async (e: FormEvent) => {
+    e.preventDefault();
+    setSubmitting(true);
+    const result = await dispatch(register({ username, email: email || undefined, password }));
+    setSubmitting(false);
+    if (register.fulfilled.match(result)) {
+      navigate("/library", { replace: true });
+    }
+>>>>>>> 088ebc434e4e609566051a7126e169906afacece
   };
 
   return (
@@ -32,6 +50,7 @@ export default function RegisterPage() {
         <h2>Регистрация</h2>
         <label>
           Имя пользователя
+<<<<<<< HEAD
           <input
             value={username}
             onChange={(e) => setUsername(e.target.value)}
@@ -44,19 +63,34 @@ export default function RegisterPage() {
         <label>
           Email
           <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
+=======
+          <input value={username} onChange={(e) => setUsername(e.target.value)} required autoFocus />
+        </label>
+        <label>
+          Email (необязательно)
+          <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} />
+>>>>>>> 088ebc434e4e609566051a7126e169906afacece
         </label>
         <label>
           Пароль
           <input
             type="password"
+<<<<<<< HEAD
             minLength={8}
             maxLength={128}
+=======
+            minLength={6}
+>>>>>>> 088ebc434e4e609566051a7126e169906afacece
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             required
           />
         </label>
+<<<<<<< HEAD
         <p className="muted small">Не менее 8 символов.</p>
+=======
+        <p className="muted small">Не менее 6 символов.</p>
+>>>>>>> 088ebc434e4e609566051a7126e169906afacece
         {error && <p className="form-error">{error}</p>}
         <button className="btn btn-primary" type="submit" disabled={submitting}>
           {submitting ? "Создаём аккаунт…" : "Зарегистрироваться"}

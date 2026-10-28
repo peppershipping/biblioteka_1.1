@@ -1,19 +1,30 @@
 """
 Конфигурация приложения. Все значения читаются из переменных окружения
+<<<<<<< HEAD
 (см. backend/.env.example) — секреты не хранятся в коде и не коммитятся.
+=======
+(см. .env.example) — так один и тот же образ работает и в docker-compose,
+и локально, без правки кода.
+>>>>>>> 088ebc434e4e609566051a7126e169906afacece
 """
 
 from functools import lru_cache
 
+<<<<<<< HEAD
 from pydantic import model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 INSECURE_DEFAULT_SECRET = "dev-insecure-secret-change-me"
 
+=======
+from pydantic_settings import BaseSettings, SettingsConfigDict
+
+>>>>>>> 088ebc434e4e609566051a7126e169906afacece
 
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8", extra="ignore")
 
+<<<<<<< HEAD
     app_env: str = "development"
     log_level: str = "INFO"
     docs_enabled: bool = True
@@ -66,6 +77,19 @@ class Settings(BaseSettings):
         if self.app_env == "production" and self.jwt_secret_key == INSECURE_DEFAULT_SECRET:
             raise ValueError("В production необходимо задать собственный JWT_SECRET_KEY")
         return self
+=======
+    database_url: str = "postgresql+psycopg://biblioteka:biblioteka@localhost:5432/biblioteka"
+
+    jwt_secret_key: str = "dev-insecure-secret-change-me"
+    jwt_algorithm: str = "HS256"
+    access_token_expire_minutes: int = 60
+
+    cors_origins: str = "http://localhost:5173"
+
+    @property
+    def cors_origin_list(self) -> list[str]:
+        return [o.strip() for o in self.cors_origins.split(",") if o.strip()]
+>>>>>>> 088ebc434e4e609566051a7126e169906afacece
 
 
 @lru_cache
