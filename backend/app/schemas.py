@@ -1,15 +1,18 @@
-<<<<<<< HEAD
-"""
-DTO (Pydantic v2) для REST API. Входные схемы отделены от ORM-моделей: клиент
-не может задать role, user_id, password_hash и другие системные поля
-(защита от mass assignment, ТЗ 15.3).
-"""
+
+"""Pydantic schemas for API requests and responses."""
 
 import re
 from datetime import datetime
 from typing import Annotated, Generic, Literal, TypeVar
 
-from pydantic import BaseModel, ConfigDict, EmailStr, Field, field_validator, model_validator
+from pydantic import (
+    BaseModel,
+    ConfigDict,
+    EmailStr,
+    Field,
+    field_validator,
+    model_validator,
+)
 
 from .models import ReadingStatus
 
@@ -17,17 +20,13 @@ T = TypeVar("T")
 
 
 class Page(BaseModel, Generic[T]):
-    """Страница результатов с пагинацией limit/offset (ТЗ 15.1, правило 39)."""
-
     items: list[T]
     limit: int
     offset: int
     total: int
 
 
-# ---------------------------------------------------------------------------
-# Аутентификация
-# ---------------------------------------------------------------------------
+# Authentication
 
 _USERNAME_RE = re.compile(r"^[\w.\-]+$")
 
@@ -39,25 +38,25 @@ class UserCreate(BaseModel):
 
     @field_validator("username")
     @classmethod
-    def _username(cls, v: str) -> str:
-        v = v.strip()
-        if len(v) < 3:
-            raise ValueError("слишком короткое имя пользователя (минимум 3 символа)")
-        if not _USERNAME_RE.match(v):
-            raise ValueError("допустимы буквы, цифры и символы . _ -")
-        return v
+    def validate_username(cls, value: str) -> str:
+        value = value.strip()
+        if len(value) < 3:
+            raise ValueError("Username must contain at least 3 characters")
+        if not _USERNAME_RE.fullmatch(value):
+            raise ValueError("Only letters, digits, '.', '_' and '-' are allowed")
+        return value
 
     @field_validator("email")
     @classmethod
-    def _email(cls, v: str) -> str:
-        v = str(v).strip().lower()
-        if len(v) > 254:
-            raise ValueError("слишком длинный адрес электронной почты")
-        return v
+    def normalize_email(cls, value: EmailStr) -> str:
+        value = str(value).strip().lower()
+        if len(value) > 254:
+            raise ValueError("Email address is too long")
+        return value
 
 
 class LoginIn(BaseModel):
-    username: str = Field(min_length=1, max_length=254)  # имя пользователя или email
+    username: str = Field(min_length=1, max_length=254)
     password: str = Field(min_length=1, max_length=128)
 
 
@@ -69,129 +68,77 @@ class TokenPair(BaseModel):
     access_token: str
     refresh_token: str
     token_type: str = "bearer"
-    expires_in: int  # секунд до истечения access-токена
-=======
-"""Pydantic-схемы запросов и ответов API (валидация — см. отчёт, раздел 5)."""
-
-from datetime import datetime
-
-from pydantic import BaseModel, ConfigDict, EmailStr, Field, field_validator
-
-# ---------------------------------------------------------------------------
-# Пользователи / авторизация
-# ---------------------------------------------------------------------------
-
-
-class UserCreate(BaseModel):
-    username: str = Field(min_length=3, max_length=150)
-    email: EmailStr | None = None
-    password: str = Field(min_length=6, max_length=128)
-
-
-class UserLogin(BaseModel):
-    username: str
-    password: str
->>>>>>> 088ebc434e4e609566051a7126e169906afacece
+    expires_in: int
 
 
 class UserOut(BaseModel):
     model_config = ConfigDict(from_attributes=True)
-<<<<<<< HEAD
 
     id: int
     username: str
     email: str
     role: str
-=======
-    id: int
-    username: str
-    email: str | None = None
 
 
-class TokenOut(BaseModel):
-    access_token: str
-    token_type: str = "bearer"
-    user: UserOut
-
-
-# ---------------------------------------------------------------------------
-# Авторы / жанры
-# ---------------------------------------------------------------------------
-
+# Authors and genres
 
 class AuthorOut(BaseModel):
     model_config = ConfigDict(from_attributes=True)
+
     id: int
     name: str
 
 
 class GenreOut(BaseModel):
     model_config = ConfigDict(from_attributes=True)
+
     id: int
     name: str
->>>>>>> 088ebc434e4e609566051a7126e169906afacece
 
 
-# ---------------------------------------------------------------------------
-# Книги
-# ---------------------------------------------------------------------------
+# Books
 
-
-<<<<<<< HEAD
-def _names(v):
-    """ORM-объекты Author/Genre -> строки с именами."""
-    return [getattr(item, "name", item) for item in (v or [])]
-=======
-class BookCreate(BaseModel):
-    title: str = Field(min_length=1, max_length=300)
-    description: str = ""
-    keywords: str = ""
-    publication_year: int | None = None
-    cover_url: str | None = None
-    authors: list[str] = Field(default_factory=list)
-    genres: list[str] = Field(default_factory=list)
->>>>>>> 088ebc434e4e609566051a7126e169906afacece
+def _names(value):
+    """Convert Author/Genre ORM objects to their names."""
+    return [getattr(item, "name", item) for item in (value or [])]
 
 
 class BookOut(BaseModel):
     model_config = ConfigDict(from_attributes=True)
-<<<<<<< HEAD
 
     id: int
     title: str
     description: str | None = None
     publication_year: int | None = None
     cover_url: str | None = None
-    authors: list[str] = []
-    genres: list[str] = []
+    authors: list[str] = Field(default_factory=list)
+    genres: list[str] = Field(default_factory=list)
 
     @field_validator("authors", "genres", mode="before")
     @classmethod
-    def _to_names(cls, v):
-        return _names(v)
+    def convert_names(cls, value):
+        return _names(value)
 
 
 class BookListItem(BookOut):
-    """Карточка каталога: данные книги + статус и оценка текущего пользователя."""
+    """Book card with the current user's status and rating."""
 
     my_status: ReadingStatus | None = None
     my_rating: float | None = None
 
 
 class BookPage(Page[BookListItem]):
-    # Если включён «умный поиск» и языковая модель распознала запрос — сюда
-    # попадают извлечённые фильтры (для отображения пользователю).
     interpreted: dict | None = None
 
 
 class BookDetail(BookListItem):
-    library_id: int | None = None  # id записи user_books, если книга в библиотеке
+    library_id: int | None = None
     avg_rating: float | None = None
     ratings_count: int = 0
 
 
 class BookCreate(BaseModel):
-    """Создание книги в общем каталоге (только admin)."""
+    """Create a book in the shared catalog; administrator only."""
 
     title: str = Field(min_length=1, max_length=300)
     description: str | None = Field(default=None, max_length=10000)
@@ -202,67 +149,46 @@ class BookCreate(BaseModel):
 
     @field_validator("title")
     @classmethod
-    def _title(cls, v: str) -> str:
-        v = v.strip()
-        if not v:
-            raise ValueError("название не может быть пустым")
-        return v
+    def validate_title(cls, value: str) -> str:
+        value = value.strip()
+        if not value:
+            raise ValueError("Title cannot be empty")
+        return value
 
     @field_validator("authors", "genres")
     @classmethod
-    def _names_list(cls, items: list[str]) -> list[str]:
-        cleaned: list[str] = []
+    def validate_names(cls, items: list[str]) -> list[str]:
+        cleaned = []
+        seen = set()
+
         for item in items:
             item = item.strip()
             if not item:
                 continue
             if len(item) > 200:
-                raise ValueError("слишком длинное имя (максимум 200 символов)")
-            if item.lower() not in {c.lower() for c in cleaned}:
+                raise ValueError("A name cannot exceed 200 characters")
+
+            key = item.casefold()
+            if key not in seen:
                 cleaned.append(item)
+                seen.add(key)
+
         return cleaned
 
     @field_validator("cover_url")
     @classmethod
-    def _cover(cls, v: str | None) -> str | None:
-        if v is None or not v.strip():
+    def validate_cover_url(cls, value: str | None) -> str | None:
+        if value is None or not value.strip():
             return None
-        v = v.strip()
-        if not re.match(r"^https?://", v, re.IGNORECASE):
-            raise ValueError("ссылка на обложку должна начинаться с http:// или https://")
-        return v
+
+        value = value.strip()
+        if not re.match(r"^https?://", value, re.IGNORECASE):
+            raise ValueError("Cover URL must start with http:// or https://")
+        return value
 
 
-class GenreOut(BaseModel):
-    model_config = ConfigDict(from_attributes=True)
+# Ratings
 
-    id: int
-    name: str
-
-
-=======
-    id: int
-    title: str
-    description: str
-    publication_year: int | None
-    cover_url: str | None
-    authors: list[AuthorOut] = Field(default_factory=list)
-    genres: list[GenreOut] = Field(default_factory=list)
-
-
-class BookWithLibraryOut(BookOut):
-    """Книга + сведения из личной библиотеки текущего пользователя (если есть)."""
-
-    status: str | None = None
-    my_rating: float | None = None
-
-
->>>>>>> 088ebc434e4e609566051a7126e169906afacece
-# ---------------------------------------------------------------------------
-# Оценки
-# ---------------------------------------------------------------------------
-
-<<<<<<< HEAD
 Score = Annotated[int, Field(strict=True, ge=1, le=10)]
 
 
@@ -278,38 +204,29 @@ class RatingPatch(BaseModel):
     style: int | None = Field(default=None, strict=True, ge=1, le=10)
 
     @model_validator(mode="after")
-    def _at_least_one(self) -> "RatingPatch":
-        if self.plot is None and self.characters is None and self.style is None:
-            raise ValueError("укажите хотя бы один критерий: plot, characters или style")
+    def require_at_least_one(self) -> "RatingPatch":
+        if (
+            self.plot is None
+            and self.characters is None
+            and self.style is None
+        ):
+            raise ValueError("Specify at least one rating criterion")
         return self
 
 
 class RatingBrief(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
-=======
-
-class RatingIn(BaseModel):
-    plot: int = Field(ge=1, le=10)
-    characters: int = Field(ge=1, le=10)
-    style: int = Field(ge=1, le=10)
-
-
-class RatingOut(BaseModel):
-    model_config = ConfigDict(from_attributes=True)
-    id: int
->>>>>>> 088ebc434e4e609566051a7126e169906afacece
     plot: int
     characters: int
     style: int
     total: float
     updated_at: datetime
 
-<<<<<<< HEAD
     @field_validator("total", mode="before")
     @classmethod
-    def _to_float(cls, v):
-        return float(v)
+    def convert_total(cls, value):
+        return float(value)
 
 
 class RatingOut(RatingBrief):
@@ -317,18 +234,12 @@ class RatingOut(RatingBrief):
 
 
 class PublicRatingOut(RatingBrief):
-    """Оценка любого пользователя в списке оценок книги (без email и id)."""
+    """Public rating without user email or user ID."""
 
     username: str
 
-=======
->>>>>>> 088ebc434e4e609566051a7126e169906afacece
 
-# ---------------------------------------------------------------------------
-# Личная библиотека
-# ---------------------------------------------------------------------------
-
-<<<<<<< HEAD
+# Personal library
 
 class LibraryCreate(BaseModel):
     book_id: int = Field(ge=1)
@@ -359,22 +270,21 @@ class LibraryStats(BaseModel):
     avg_rating: float | None
 
 
-# ---------------------------------------------------------------------------
-# Рекомендации
-# ---------------------------------------------------------------------------
-
+# Recommendations
 
 class RecommendationSignals(BaseModel):
-    similar_to: str | None = None  # название понравившейся книги, на которую похожа рекомендация
-    genres: list[str] = []  # общие с вашими любимыми книгами жанры
+    similar_to: str | None = None
+    genres: list[str] = Field(default_factory=list)
 
 
 class RecommendationOut(BaseModel):
     id: int
     book: BookOut
-    reason: str | None = None  # пояснение языковой модели; None — модель недоступна
+    reason: str | None = None
     score: float | None = None
-    signals: RecommendationSignals = Field(default_factory=RecommendationSignals)
+    signals: RecommendationSignals = Field(
+        default_factory=RecommendationSignals
+    )
     feedback: Literal["helpful", "not_helpful"] | None = None
 
 
@@ -383,7 +293,7 @@ class RecommendationsPage(Page[RecommendationOut]):
     ratings_count: int
     min_ratings: int
     message: str | None = None
-    explanations: bool = False  # есть ли у подборки пояснения языковой модели
+    explanations: bool = False
 
 
 class FeedbackIn(BaseModel):
@@ -396,57 +306,8 @@ class FeedbackOut(BaseModel):
     feedback: Literal["helpful", "not_helpful"]
 
 
-# Для стабильной сортировки/фильтров (белые списки — ТЗ 15.3)
+# Sorting and filtering
+
 CatalogSort = Literal["relevance", "title", "year", "created"]
 LibrarySort = Literal["added", "title", "status", "rating"]
 SortOrder = Literal["asc", "desc"]
-=======
-VALID_STATUSES = {"want_to_read", "reading", "read"}
-
-
-class UserBookCreate(BaseModel):
-    book_id: int
-    status: str = "want_to_read"
-
-    @field_validator("status")
-    @classmethod
-    def check_status(cls, v: str) -> str:
-        if v not in VALID_STATUSES:
-            raise ValueError(f"Недопустимый статус. Разрешены: {', '.join(sorted(VALID_STATUSES))}")
-        return v
-
-
-class UserBookUpdate(BaseModel):
-    """Можно менять статус, комментарий или оба поля сразу."""
-
-    status: str | None = None
-    comment: str | None = Field(default=None, max_length=5000)
-
-    @field_validator("status")
-    @classmethod
-    def check_status(cls, v: str | None) -> str | None:
-        if v is not None and v not in VALID_STATUSES:
-            raise ValueError(f"Недопустимый статус. Разрешены: {', '.join(sorted(VALID_STATUSES))}")
-        return v
-
-
-class CustomBookCreate(BaseModel):
-    """Книга, введённая пользователем вручную (форма «Добавить книгу»)."""
-
-    title: str = Field(min_length=1, max_length=300)
-    author: str = Field(min_length=1, max_length=255)
-    description: str = Field(default="", max_length=5000)  # краткое описание сюжета
-    comment: str = Field(default="", max_length=5000)  # личный комментарий
-
-
-class UserBookOut(BaseModel):
-    model_config = ConfigDict(from_attributes=True)
-    id: int
-    book_id: int
-    status: str
-    comment: str = ""
-    added_at: datetime
-    book: BookOut
-    rating: RatingOut | None = None  # сюжет, персонажи, стиль, общая
-    my_rating: float | None = None  # то же, что rating.total — оставлено для совместимости
->>>>>>> 088ebc434e4e609566051a7126e169906afacece

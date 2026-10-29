@@ -1,12 +1,7 @@
-<<<<<<< HEAD
-# Библиотека: nginx (frontend + reverse proxy) -> backend (FastAPI) -> db (PostgreSQL), + redis (кэш).
-# Запуск:  docker compose up --build        Приложение: http://localhost:8080
+
+# Библиотека: nginx -> backend (FastAPI) -> PostgreSQL + Redis
 services:
   db:
-=======
-services:
-  postgres:
->>>>>>> 088ebc434e4e609566051a7126e169906afacece
     image: postgres:16-alpine
     restart: unless-stopped
     environment:
@@ -16,20 +11,14 @@ services:
     volumes:
       - pgdata:/var/lib/postgresql/data
     healthcheck:
-<<<<<<< HEAD
       test: ["CMD-SHELL", "pg_isready -U biblioteka -d biblioteka"]
-=======
-      test: ["CMD-SHELL", "pg_isready -U biblioteka"]
->>>>>>> 088ebc434e4e609566051a7126e169906afacece
       interval: 5s
       timeout: 5s
       retries: 10
 
-<<<<<<< HEAD
   redis:
     image: redis:7-alpine
     restart: unless-stopped
-    # Только кэш: без сохранения на диск; потеря данных Redis ничего не ломает
     command: ["redis-server", "--save", "", "--appendonly", "no"]
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
@@ -37,15 +26,12 @@ services:
       timeout: 3s
       retries: 10
 
-=======
->>>>>>> 088ebc434e4e609566051a7126e169906afacece
   backend:
     build: ./backend
     restart: unless-stopped
     env_file:
-<<<<<<< HEAD
       - path: ./backend/.env
-        required: false      # файл создаётся копированием backend/.env.example
+        required: false
     environment:
       DATABASE_URL: postgresql+psycopg://biblioteka:biblioteka@db:5432/biblioteka
       REDIS_URL: redis://redis:6379/0
@@ -55,7 +41,7 @@ services:
       redis:
         condition: service_healthy
     ports:
-      - "8000:8000"          # Swagger UI: http://localhost:8000/docs (только для разработки)
+      - "8000:8000"
     healthcheck:
       test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health', timeout=3)"]
       interval: 10s
@@ -69,23 +55,6 @@ services:
     depends_on:
       backend:
         condition: service_healthy
-=======
-      - ./backend/.env
-    environment:
-      DATABASE_URL: postgresql+psycopg://biblioteka:biblioteka@postgres:5432/biblioteka
-      CORS_ORIGINS: http://localhost:8080,http://localhost:5173
-    depends_on:
-      postgres:
-        condition: service_healthy
-    ports:
-      - "8000:8000"
-
-  frontend:
-    build: ./frontend
-    restart: unless-stopped
-    depends_on:
-      - backend
->>>>>>> 088ebc434e4e609566051a7126e169906afacece
     ports:
       - "8080:80"
 

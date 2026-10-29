@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 export type ReadingStatus = "want_to_read" | "in_progress" | "read";
 
 export const STATUS_LABELS: Record<ReadingStatus, string> = {
@@ -7,7 +6,11 @@ export const STATUS_LABELS: Record<ReadingStatus, string> = {
   read: "Прочитано",
 };
 
-export const STATUSES: ReadingStatus[] = ["want_to_read", "in_progress", "read"];
+export const STATUSES: ReadingStatus[] = [
+  "want_to_read",
+  "in_progress",
+  "read",
+];
 
 export interface User {
   id: number;
@@ -28,28 +31,11 @@ export interface Page<T> {
   limit: number;
   offset: number;
   total: number;
-=======
-export interface User {
-  id: number;
-  username: string;
-  email: string | null;
-}
-
-export interface Author {
-  id: number;
-  name: string;
-}
-
-export interface Genre {
-  id: number;
-  name: string;
->>>>>>> 088ebc434e4e609566051a7126e169906afacece
 }
 
 export interface Book {
   id: number;
   title: string;
-<<<<<<< HEAD
   description: string | null;
   publication_year: number | null;
   cover_url: string | null;
@@ -79,41 +65,7 @@ export interface BookDetail extends BookListItem {
 }
 
 export interface Rating {
-=======
-  description: string;
-  publication_year: number | null;
-  cover_url: string | null;
-  authors: Author[];
-  genres: Genre[];
-}
-
-export interface BookDetail extends Book {
-  status: ReadingStatus | null;
-  my_rating: number | null;
-}
-
-export type ReadingStatus = "want_to_read" | "reading" | "read";
-
-export const STATUS_LABELS: Record<ReadingStatus, string> = {
-  want_to_read: "Хочу прочитать",
-  reading: "Читаю",
-  read: "Прочитано",
-};
-
-export interface LibraryEntry {
   id: number;
-  book_id: number;
-  status: ReadingStatus;
-  comment: string;
-  added_at: string;
-  book: Book;
-  rating: Rating | null;
-  my_rating: number | null;
-}
-
-export interface Rating {
-  id: number;
->>>>>>> 088ebc434e4e609566051a7126e169906afacece
   plot: number;
   characters: number;
   style: number;
@@ -121,7 +73,6 @@ export interface Rating {
   updated_at: string;
 }
 
-<<<<<<< HEAD
 export interface PublicRating extends Rating {
   username: string;
 }
@@ -151,7 +102,10 @@ export interface Recommendation {
   book: Book;
   reason: string | null;
   score: number | null;
-  signals: { similar_to: string | null; genres: string[] };
+  signals: {
+    similar_to: string | null;
+    genres: string[];
+  };
   feedback: Feedback | null;
 }
 
@@ -166,10 +120,4 @@ export interface RecommendationsPage extends Page<Recommendation> {
 export interface Genre {
   id: number;
   name: string;
-=======
-export interface TokenResponse {
-  access_token: string;
-  token_type: string;
-  user: User;
->>>>>>> 088ebc434e4e609566051a7126e169906afacece
 }

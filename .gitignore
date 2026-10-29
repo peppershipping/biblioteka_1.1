@@ -1,14 +1,33 @@
+
+# Environment variables and secrets
+.env
+.env.*
+!.env.example
 backend/.env
-<<<<<<< HEAD
+backend/.env.*
+
+# Python
+__pycache__/
 **/__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
 backend/.venv/
 backend/.pytest_cache/
-backend/.coverage
-=======
-backend/__pycache__/
-backend/**/__pycache__/
-backend/.venv/
->>>>>>> 088ebc434e4e609566051a7126e169906afacece
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Frontend
 frontend/node_modules/
 frontend/dist/
+
+# IDE and operating system
+.vscode/
+.idea/
 .DS_Store
+Thumbs.db
+# Conflict backups
+backend-conflict-backup/
+*.conflict-backup
